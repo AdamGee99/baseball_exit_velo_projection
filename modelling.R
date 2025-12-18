@@ -30,8 +30,11 @@ true_vals = test %>%
 ### Baseline Model ### 
 
 #for quick testing
-#train = train %>% filter(stan_batter_id %in% 1:50)
-
+train_subset = train %>% filter(stan_batter_id %in% 1:10)
+stan_data_subset = list(N = nrow(train_subset),
+                        J = train_subset$stan_batter_id %>% unique() %>% length(),
+                        y = train_subset$exit_velo,
+                        id = train_subset$stan_batter_id)
 #input to stan
 stan_data = list(N = nrow(train),
                  J = train$stan_batter_id %>% unique() %>% length(),
@@ -84,18 +87,23 @@ get_player_pars = function(fit, player_pars, global_pars) {
     pivot_wider(names_from = param, values_from = mean)
   
   #global (shared) pars
-  global_pars_sum = fit$summary(global_pars) %>% 
-    select(variable, mean) %>%
-    pivot_wider(names_from = variable, values_from = mean)
-
-  #join
-  cbind(player_pars_sum, global_pars_sum)
+  if(is.character(global_pars)) {
+    global_pars_sum = fit$summary(global_pars) %>% 
+      select(variable, mean) %>%
+      pivot_wider(names_from = variable, values_from = mean)
+    
+    #join
+    cbind(player_pars_sum, global_pars_sum)
+  } else {
+    player_pars_sum
+  }
+  
 }
 
 #function that takes in fitted pars and outputs df with true values and predicted values
 get_results = function(fitted_pars, true_vals) {
-  full_join(fitted_pars, true_vals, by = "stan_batter_id") %>%
-    mutate(pred_mean_exit_velo = get_skew_mean(location = mu, scale = sigma, skew = alpha)) 
+  left_join(fitted_pars, true_vals, by = "stan_batter_id") %>%
+    mutate(pred_mean_exit_velo = get_skew_mean(location = zeta, scale = omega, skew = alpha)) 
 }
 
 #function that takes in results and plot true vs predicted
@@ -146,9 +154,16 @@ baseline_rmse
 #' Iterations:
 #' 1. add player-specific scales (sigma)
 #'    - improvement 1.59 --> 1.44 rmse
-#'    - but increases computation time
 #' 
-#' 2. add player-specific skew (alpha)
+#' 2. adding hierarchical structure
+#'    - improvement 1.44 --> 1.41 rmse
+#'    - increases computation time by wuite a bit though
+#' 
+#' 3. adding player-specific skew
+#' 
+
+
+
 
 
 stan_file = here("stan", "advanced.stan")
@@ -167,18 +182,20 @@ fit = mod$sample(data = stan_data,
 #fit$save_object(file = here("stan fits", "advanced.RDS"))
 
 #read in fit
-fit = readRDS(file = here("stan fits", "advanced.RDS"))
+#fit = readRDS(file = here("stan fits", "advanced.RDS"))
 
-fit$summary()
+fit$summary() 
 #good convergence - rhat close to 1
 
 #posteriors
-mcmc_areas(fit$draws(c("mu"))) #locations
-mcmc_areas(fit$draws(c("sigma"))) #scales
+mcmc_areas(fit$draws(c("zeta"))) #locations
+mcmc_areas(fit$draws(c("omega"))) #scales
+mcmc_areas(fit$draws(c("mu_zeta"))) #locations
+mcmc_areas(fit$draws(c("mu_omega"))) #scales
 mcmc_areas(fit$draws(c("alpha"))) #skew
 
 #get fitted pars
-advanced_fitted_pars_2024 = get_player_pars(fit, player_pars = c("mu", "sigma"), global_pars = c("alpha"))
+advanced_fitted_pars_2024 = get_player_pars(fit, player_pars = c("zeta", "omega"), global_pars = "alpha")
 
 #results (true vals vs predicted vals)
 advanced_results = get_results(advanced_fitted_pars_2024, true_vals)
@@ -189,6 +206,6 @@ plot_results(advanced_results)
 #rmse
 advanced_rmse = get_rmse(advanced_results)
 advanced_rmse
-#1.44
+#1.41
 
 
