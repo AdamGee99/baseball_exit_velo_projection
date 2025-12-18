@@ -99,9 +99,9 @@ get_est_mean = function(fitted_pars) {
            skew = fitted_pars$alpha)
 }
 
-fitted_pars_2024 = get_player_pars(fit, c("mu"), c("sigma", "alpha"))
+baseline_fitted_pars_2024 = get_player_pars(fit, c("mu"), c("sigma", "alpha"))
 true_mean_2025 = true_vals$mean_exit_velo
-est_mean_2025 = get_est_mean(fitted_pars_2024)
+est_mean_2025 = get_est_mean(baseline_fitted_pars_2024)
 
 
 #rmse
@@ -113,5 +113,52 @@ sqrt(mean((true_mean_2025 - est_mean_2025)^2))
 
 
 ### Advanced Model ### 
+
+
+#' building on baseline model one iteration at a time
+#' if new iteration improves predictions, adopt it, if not scrap it
+
+
+#' Iterations:
+#' 1. add player-specific scales (sigma)
+#'    - improvement 1.59 --> 1.44 rmse
+#'    - but increases computation time
+#' 
+#' 2. add player-specific skew (alpha)
+
+
+stan_file = here("stan", "advanced.stan")
+#model
+mod = cmdstan_model(stan_file)
+
+#sample from model
+fit = mod$sample(data = stan_data,
+                 seed = 123,
+                 chains = 4,
+                 parallel_chains = 4,
+                 refresh = 100)
+
+
+#save advanced fit
+fit$save_object(file = here("stan fits", "advanced.RDS"))
+
+#read in fit
+fit = readRDS(file = here("stan fits", "advanced.RDS"))
+
+fit$summary()
+#all chains show good convergence - rhat close to 1
+
+#posteriors
+mcmc_areas(fit$draws(c("mu"))) #locations
+mcmc_areas(fit$draws(c("sigma"))) #scales
+mcmc_areas(fit$draws(c("alpha"))) #skew
+
+ 
+advanced_fitted_pars_2024 = get_player_pars(fit, player_pars = c("mu", "sigma"), global_pars = c("alpha"))
+advanced_est_mean_2025 = get_est_mean(advanced_fitted_pars_2024)
+
+#rmse
+sqrt(mean((true_mean_2025 - advanced_est_mean_2025)^2))
+#1.44
 
 

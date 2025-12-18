@@ -1,10 +1,10 @@
-// baseline model 
+// advanced model 
 
-// this will just be the intercept only model, no effects
-// no-pooling model, each intercept estiamted from players own hits only
-
-// location is batter-specific, scale and skew are shared across all players
-// this is probably way oversimplified but useful to get a sense of whats going on
+// iterating upon baseline model 
+//
+// Iterations:
+// 1. add player-specific scales (sigma)
+//
 
 data {
   int<lower=0> N;                      // number of batted balls
@@ -15,18 +15,18 @@ data {
 
 parameters {
   array[J] real mu;                    // batter-specific location
-  real sigma <lower=0>;                // common scale across all players
+  array[J] real <lower=0> sigma;       // batter-specific scale 
   real alpha;                          // common skew across all players
 }
 
 model {
   mu ~ normal(100, 10);                // prior for batter-specific intercept
-  sigma ~ normal(20, 5);               // prior for common scale
+  sigma ~ normal(20, 5);               // prior for batter-specific scale
   alpha ~ normal(-5, 5);               // prior for common skew
   
   for (i in 1:N){
     //skew_normal(location, scale, skew)
-    y[i] ~ skew_normal(mu[id[i]], sigma, alpha);
+    y[i] ~ skew_normal(mu[id[i]], sigma[id[i]], alpha);
   }
 }
 
