@@ -21,7 +21,7 @@ test = mlb_full %>% filter(game_year == 2025)
 true_vals = test %>%
   select(stan_batter_id, exit_velo) %>%
   group_by(stan_batter_id) %>%
-  summarise(mean_exit_velo = mean(exit_velo)) %>%
+  summarise(true_mean_exit_velo = mean(exit_velo)) %>%
   ungroup()
 
 
@@ -69,7 +69,7 @@ mcmc_areas(fit$draws(c("alpha"))) #skew
 #function that gets batters mean given their estimated location, scale and skew parameters
 #this is the exact mean from the skewed normal distribution given the location, scale and skew parameters 
 #https://en.wikipedia.org/wiki/Skew_normal_distribution
-get_mean = function(location, scale, skew) {
+get_skew_mean = function(location, scale, skew) {
   location + scale*(skew/sqrt(1 + skew^2))*sqrt(2/pi)
 }
 
@@ -92,22 +92,46 @@ get_player_pars = function(fit, player_pars, global_pars) {
   cbind(player_pars_sum, global_pars_sum)
 }
 
-#function that returns estimated mean for 2025 season
-get_est_mean = function(fitted_pars) {
-  get_mean(location = fitted_pars$mu, 
-           scale = fitted_pars$sigma, 
-           skew = fitted_pars$alpha)
+#function that takes in fitted pars and outputs df with true values and predicted values
+get_results = function(fitted_pars, true_vals) {
+  full_join(fitted_pars, true_vals, by = "stan_batter_id") %>%
+    mutate(pred_mean_exit_velo = get_skew_mean(location = mu, scale = sigma, skew = alpha)) 
 }
 
+#function that takes in results and plot true vs predicted
+plot_results = function(results) {
+  ggplot(results, mapping = aes(x = true_mean_exit_velo, y = pred_mean_exit_velo)) + 
+    geom_point() + 
+    geom_abline(slope = 1, intercept = 0, colour = "orange", size = 1) +
+    scale_x_continuous(limits = c(80, 98), n.breaks = 10) + 
+    scale_y_continuous(limits = c(80, 98), n.breaks = 10) + 
+    labs(x = "True Mean Exit Velocity (mph)", y = "Predicted Mean Exit Velocity (mph)") +
+    theme_bw()
+}
+
+#function that takes in results and outputs rmse
+get_rmse = function(results) {
+  results %>% 
+    summarise(rmse = sqrt(mean((true_mean_exit_velo - pred_mean_exit_velo)^2))) %>%
+    pull(rmse)
+}
+
+#fitted pars from baseline fit
 baseline_fitted_pars_2024 = get_player_pars(fit, c("mu"), c("sigma", "alpha"))
-true_mean_2025 = true_vals$mean_exit_velo
-est_mean_2025 = get_est_mean(baseline_fitted_pars_2024)
+
+#results (true vals vs predicted vals)
+baseline_results = get_results(baseline_fitted_pars_2024, true_vals)
+
+#plot results
+plot_results(baseline_results)
 
 
 #rmse
-sqrt(mean((true_mean_2025 - est_mean_2025)^2))
+baseline_rmse = get_rmse(baseline_results)
+baseline_rmse
 #1.59
 #on avg model has 2025 seasonal mean error of 1.59 mph 
+
 
 
 
@@ -140,25 +164,31 @@ fit = mod$sample(data = stan_data,
 
 
 #save advanced fit
-fit$save_object(file = here("stan fits", "advanced.RDS"))
+#fit$save_object(file = here("stan fits", "advanced.RDS"))
 
 #read in fit
 fit = readRDS(file = here("stan fits", "advanced.RDS"))
 
 fit$summary()
-#all chains show good convergence - rhat close to 1
+#good convergence - rhat close to 1
 
 #posteriors
 mcmc_areas(fit$draws(c("mu"))) #locations
 mcmc_areas(fit$draws(c("sigma"))) #scales
 mcmc_areas(fit$draws(c("alpha"))) #skew
 
- 
+#get fitted pars
 advanced_fitted_pars_2024 = get_player_pars(fit, player_pars = c("mu", "sigma"), global_pars = c("alpha"))
-advanced_est_mean_2025 = get_est_mean(advanced_fitted_pars_2024)
+
+#results (true vals vs predicted vals)
+advanced_results = get_results(advanced_fitted_pars_2024, true_vals)
+
+#plot results
+plot_results(advanced_results)
 
 #rmse
-sqrt(mean((true_mean_2025 - advanced_est_mean_2025)^2))
+advanced_rmse = get_rmse(advanced_results)
+advanced_rmse
 #1.44
 
 
