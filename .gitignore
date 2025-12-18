@@ -4,3 +4,5 @@
 .Ruserdata
 data/2024/
 data/2025/
+*.exe
+*.RDS
