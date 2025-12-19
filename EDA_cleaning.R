@@ -90,6 +90,49 @@ batter_ids = mlb_full$batter %>% unique()
 mlb_full = mlb_full %>%
   mutate(stan_batter_id = match(batter, batter_ids))
 
+#adding specific batter heights and weights not found here
+height_weight = mlb_full %>% 
+  group_by(stan_batter_id) %>% 
+  slice(1) %>% 
+  select(stan_batter_id, height, weight) %>% 
+  mutate(height = ifelse(!is.na(height), height, case_when(
+    stan_batter_id == 3 ~ 71,
+    stan_batter_id == 5 ~ 75,
+    stan_batter_id == 16 ~ 72,
+    stan_batter_id == 21 ~ 71,
+    stan_batter_id == 22 ~ 72,
+    stan_batter_id == 54 ~ 72,
+    stan_batter_id == 62 ~ 68,
+    stan_batter_id == 64 ~ 75,
+    stan_batter_id == 66 ~ 72,
+    stan_batter_id == 67 ~ 71,
+    stan_batter_id == 72 ~ 75,
+    stan_batter_id == 77 ~ 72,
+    stan_batter_id == 84 ~ 73,
+    stan_batter_id == 89 ~ 73,
+    stan_batter_id == 95 ~ 73,
+  )),
+  weight = ifelse(!is.na(weight), weight, case_when(
+    stan_batter_id == 3 ~ 213,
+    stan_batter_id == 5 ~ 215,
+    stan_batter_id == 16 ~ 245,
+    stan_batter_id == 21 ~ 184,
+    stan_batter_id == 22 ~ 195,
+    stan_batter_id == 54 ~ 215,
+    stan_batter_id == 62 ~ 190,
+    stan_batter_id == 64 ~ 228,
+    stan_batter_id == 66 ~ 202,
+    stan_batter_id == 67 ~ 161,
+    stan_batter_id == 72 ~ 217,
+    stan_batter_id == 77 ~ 205,
+    stan_batter_id == 84 ~ 216,
+    stan_batter_id == 89 ~ 235,
+    stan_batter_id == 95 ~ 200,
+  )))
+
+#join
+mlb_full = mlb_full %>% select(-c(height, weight)) %>% left_join(height_weight, by = "stan_batter_id")
+
 
 #save
 #write.csv(mlb_full, file = here("data", "mlb_2024_2025.csv"), row.names = FALSE)
