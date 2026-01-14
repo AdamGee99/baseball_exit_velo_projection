@@ -90,6 +90,8 @@ batter_ids = mlb_full$batter %>% unique()
 mlb_full = mlb_full %>%
   mutate(stan_batter_id = match(batter, batter_ids))
 
+id_map = mlb_full %>% select(batter, stan_batter_id) %>% distinct()
+
 #adding specific batter heights and weights not found here
 height_weight = mlb_full %>% 
   group_by(stan_batter_id) %>% 
@@ -194,10 +196,10 @@ mlb_player_summary = mlb_full %>%
   slice(1) %>%
   ungroup() %>%
   select(batter, mean_exit_velo, all_of(static_features))
+#join stan batter ids
+mlb_player_summary = mlb_player_summary %>% left_join(id_map, by = "batter")
   
-
 summary(mlb_player_summary)
-#15 players out of 100 dont have heights and weights
 
 
 # height effects 
@@ -207,22 +209,50 @@ ggplot(data = mlb_full, mapping = aes(x = factor(height), y = exit_velo)) +
 ggplot(data = mlb_player_summary, mapping = aes(x = factor(height), y = mean_exit_velo)) +
   geom_boxplot() + labs(x = "Height (Inches)", y = "Seasonal Mean Batted Ball Exit Velo (mph)") + theme_bw()
 
+
+lm(dat = mlb_full, formula = exit_velo ~ height) %>% summary()
 #significant hieght effect
 
 
 
+# weight effects 
+# bin for visualization
+ggplot(data = mlb_full, mapping = aes(x = cut(weight, breaks = 6), y = exit_velo)) +
+  geom_boxplot() + labs(x = "Weight Bin (pounds)", y = "Batted Ball Exit Velo (mph)") + theme_bw()
+
+ggplot(data = mlb_player_summary, mapping = aes(x =  cut(weight, breaks = 6), y = mean_exit_velo)) +
+  geom_boxplot() + labs(x = "Weight Bin (pounds)", y = "Seasonal Mean Batted Ball Exit Velo (mph)") + theme_bw()
+
+lm(dat = mlb_full, formula = exit_velo ~ weight) %>% summary()
+#significant weight effect
+
+
+
 # age effects
-ggplot(data = mlb_full, mapping = aes(x = factor(age_bat), y = exit_velo)) +
+ggplot(data = mlb_full, mapping = aes(x = cut(age_bat, breaks = 6), y = exit_velo)) +
   geom_boxplot() + labs(x = "Age", y = "Batted Ball Exit Velo (mph)") + theme_bw()
 
-ggplot(data = mlb_player_summary, mapping = aes(x = factor(age_bat), y = mean_exit_velo)) +
+ggplot(data = mlb_player_summary, mapping = aes(x = cut(age_bat, breaks = 6), y = mean_exit_velo)) +
   geom_boxplot() + labs(x = "Age", y = "Seasonal Mean Batted Ball Exit Velo (mph)") + theme_bw()
-
-
 #age mostly pretty flat, no global effect
+#maybe very small effect but probably insignificant
+
+
+lm(dat = mlb_full, formula = exit_velo ~ age_bat + height + weight) %>% summary()
+
+#need quite a few batters to start seeing real effects though
+lm(dat = mlb_full %>% filter(stan_batter_id %in% 1:10), formula = exit_velo ~ age_bat + height + weight) %>% summary()
+#eg with only 10 batters the height effect is significantly negative
+#with 100 its significantly positive and most likely real
+
+#need to include wide range of heights when we subset the data to capture the effect
+lm(dat = mlb_full %>% filter(stan_batter_id %in% 1:100), formula = exit_velo ~ age_bat + height + weight) %>% summary()
+
+#weight seems to have more signal and is always present even with a small amount of players
 
 
 # look into player-level age effects
+
 
 
 
