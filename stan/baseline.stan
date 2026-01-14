@@ -14,19 +14,19 @@ data {
 }
 
 parameters {
-  array[J] real mu;                    // batter-specific location
-  real sigma <lower=0>;                // common scale across all players
+  array[J] real zeta;                  // batter-specific location
+  real <lower=0> omega;                // common scale across all players
   real alpha;                          // common skew across all players
 }
 
 model {
-  mu ~ normal(100, 10);                // prior for batter-specific intercept
-  sigma ~ normal(20, 5);               // prior for common scale
+  zeta ~ normal(100, 10);              // prior for batter-specific intercept
+  omega ~ normal(20, 5);               // prior for common scale
   alpha ~ normal(-5, 5);               // prior for common skew
   
   for (i in 1:N){
     //skew_normal(location, scale, skew)
-    y[i] ~ skew_normal(mu[id[i]], sigma, alpha);
+    y[i] ~ skew_normal(zeta[id[i]], omega, alpha);
   }
 }
 
