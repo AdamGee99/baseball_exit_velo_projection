@@ -7,7 +7,7 @@ library(bayesplot)
 library(ggdist)
 library(sn)
 library(scattermore)
-
+source(here("helper.R"))
 
 
 ############################################## Import Data ############################################## 
@@ -151,21 +151,6 @@ mlb_full = read.csv(here("data", "mlb_2024_2025.csv"))
 #100 players with the most batted balls
 mlb_full$player_name %>% unique() %>% length() 
 
-
-plot_exit_velo_dist = function(df) {
-  if(length(unique(df$batter)) == 1) {
-    player_name = unique(df$player_name)
-  } else {
-      player_name = "All Players"
-    }
-  
-  ggplot(df, mapping = aes(x = exit_velo)) +
-    geom_histogram(colour = "black", fill = "orange", bins = 30) +
-    labs(x = "Exit Velocity (mph)", y = "Count", title = player_name) +
-    scale_x_continuous(limits = c(0, 130), n.breaks = 12) +
-    theme_bw()
-}
-
 plot_exit_velo_dist(mlb_full)
 #follows a skew normal distribution
 
@@ -211,7 +196,7 @@ ggplot(data = mlb_player_summary, mapping = aes(x = factor(height), y = mean_exi
 
 
 lm(dat = mlb_full, formula = exit_velo ~ height) %>% summary()
-#significant hieght effect
+#significant height effect
 
 
 
