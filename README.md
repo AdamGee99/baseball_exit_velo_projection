@@ -10,13 +10,12 @@
   4. **Able to simulate new players**: International or minor league players' future performance can still be projected.
 
 ## Data
-- Data scraped from baseball savant statcast
-- Used [baseballr](https://billpetti.github.io/baseballr/) package for batted ball info and the [Sean Lahman Baseball Database](https://cran.r-project.org/web/packages/Lahman/index.html) for player height and weight info.
+- Used the [baseballr](https://billpetti.github.io/baseballr/) package for batted ball info and the [Sean Lahman Baseball Database](https://cran.r-project.org/web/packages/Lahman/index.html) for player height and weight info.
 - Collected batted ball info for 394 players across the 2024, 2025 MLB seasons.
 - Over 250,000 batted ball observations.
 - Train model on 2024 season, evaluate on 2025 season.
 
-## EDA
+## Exploratory Data Analysis
 
 ## Modelling Process
 
