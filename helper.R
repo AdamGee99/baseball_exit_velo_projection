@@ -1,29 +1,30 @@
 #helper functions
 
 
-### Plotting functions ###
+### EDA functions ###
 
 
 #function that plots exit velo for a df, could be a single player or multiple players
-plot_exit_velo_dist = function(df) {
+plot_exit_velo_dist = function(df, title = NULL) {
   if(length(unique(df$batter)) == 1) {
     player_name = unique(df$player_name)
-  } else {
+  } else if(is.character(title)) {
+    player_name = title
+    } else {
     player_name = "All Players"
   }
   
-  ggplot(df, mapping = aes(x = exit_velo)) +
+  ggplot(df, mapping = aes(x = exit_velo, y = after_stat(density))) +
     geom_histogram(colour = "black", fill = "orange", bins = 30) +
-    labs(x = "Exit Velocity (mph)", y = "Count", title = player_name) +
+    labs(x = "Exit Velocity (mph)", y = "Density", title = player_name) +
     scale_x_continuous(limits = c(0, 130), n.breaks = 12) +
+    scale_y_continuous(n.breaks = 4) +
     theme_bw()
 }
 
 
 
-
 ### MCMC functions ###
-
 
 
 #function that gets batters mean given their estimated location, scale and skew parameters
@@ -74,8 +75,8 @@ plot_results = function(results) {
   ggplot(results, mapping = aes(x = true_mean_exit_velo, y = pred_mean_exit_velo)) + 
     geom_point() + 
     geom_abline(slope = 1, intercept = 0, colour = "orange", size = 1) +
-    scale_x_continuous(limits = c(80, 98), n.breaks = 10) + 
-    scale_y_continuous(limits = c(80, 98), n.breaks = 10) + 
+    scale_x_continuous(limits = c(78, 98), n.breaks = 11) + 
+    scale_y_continuous(limits = c(78, 98), n.breaks = 11) + 
     labs(x = "True Mean Exit Velocity (mph)", y = "Predicted Mean Exit Velocity (mph)") +
     theme_bw()
 }
@@ -86,5 +87,15 @@ get_rmse = function(results) {
     summarise(rmse = sqrt(mean((true_mean_exit_velo - pred_mean_exit_velo)^2))) %>%
     pull(rmse)
 }
+
+
+
+
+### Plotting functions ###
+
+
+
+
+
 
 
