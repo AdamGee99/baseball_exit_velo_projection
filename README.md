@@ -15,11 +15,19 @@
 - Train model on 2024 season, evaluate on 2025 season.
 
 ## Exploratory Data Analysis
+- dist of exit velos
+- weight/height effect
+- lack of age effect
 
 ## Modelling Process
+- briefly define model, maybe assumptions?
 
 ## Results
-
-## Conclusions
+- prediction results in a table against naive model
+- pred mean dists plot
+- 2 player predictive dists plots
 
 ## Future Work
+- incorporating player-level age effects (need player trends over multiple seasons),
+- incorporate level effects (promotion to mlb from minors/international)
+- evaluate model on a game to game basis, will improve credible interval validity
