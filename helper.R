@@ -34,6 +34,28 @@ get_skew_mean = function(location, scale, skew) {
   location + scale*(skew/sqrt(1 + skew^2))*sqrt(2/pi)
 }
 
+#function that gets all 4000 draws of parameter sets for each player
+get_par_draws = function(fit, player_pars, global_pars) {
+  player_specific_par_draws = fit$draws(player_pars) %>% 
+    as_draws_df() %>%
+    select(-c(".chain", ".iteration")) %>%
+    pivot_longer(-.draw) %>%
+    mutate(stan_batter_id = as.numeric(gsub(".*\\[|\\]", "", name)), 
+           param = gsub("\\[.*", "", name)) %>%
+    select(-name) %>%
+    pivot_wider(names_from = param, values_from = value)
+  
+  if(is.character(global_pars)) {
+    global_par_draws = fit$draws(global_pars) %>%
+      as_draws_df() %>%
+      select(-c(.chain, .iteration))
+  }
+  
+  player_specific_par_draws %>% 
+    full_join(global_par_draws, by = ".draw") %>%
+    left_join(height_weight, by = "stan_batter_id") 
+}
+
 #player and global pars inputted as characters
 get_player_pars = function(fit, player_pars, global_pars) {
   #player-speciic pars
@@ -94,7 +116,59 @@ get_rmse = function(results) {
 ### Plotting functions ###
 
 
+#function that plots the predicted mean exit velo of 2025 distributions for certain players against truth 
+#players is the stan_batter_id map to player name df
+#draws is the 4000 posterior draws df for each player 
+plot_pred_mean_dists = function(players, draws) {
+  #for geom_segment below
+  geom_seg_vals = players_vis %>%
+    left_join(true_vals) %>%
+    mutate(player_name = factor(player_name, levels = players_vis$player_name),
+           ymin = row_number() - 0.3,
+           ymax = row_number() + 0.3)
+  
+  #player predictive distributions vs true mean exit velo in 2025
+  pred_mean_dists = draws %>%
+    ggplot(mapping = aes(x = pred_mean_exit_velo, y = factor(player_name, levels = players_vis$player_name))) +
+    stat_histinterval(fill = "#00A3E0") +
+    geom_segment(data = geom_seg_vals,
+                 aes(x = true_mean_exit_velo, xend = true_mean_exit_velo, y = ymin, yend = ymax,
+                     color = "True Mean Exit\nVelocity in 2025"), linewidth = 1.1, 
+                 key_glyph = 'vline') +
+    labs(x = "Estimated 2025 Mean Exit Velocity (mph)", y = "Batter") +
+    scale_x_continuous(limits = c(81.5, 93), n.breaks = 10) +
+    scale_color_manual(name = "", values=c("True Mean Exit\nVelocity in 2025" = "red"))+
+    theme_bw()
+  pred_mean_dists
+}
 
+
+#function that plots player predictive distribution against their observed exit velo dist in 2025
+#id is stan_batter_id
+plot_player_predictive_dist = function(player_id, player_name, fit_results) {
+  player_results = fit_results %>% filter(stan_batter_id == player_id)
+  
+  mlb_full %>% 
+    filter(game_year == 2025, stan_batter_id == player_id) %>%
+    ggplot(mapping = aes(x = exit_velo)) +
+    #observed distribution in 2025
+    geom_histogram(aes(y = after_stat(density), fill = "Observed 2025\nExit Velocities"), colour = "black") + 
+    #predictive distribution from 2024
+    stat_function(fun = dsn, 
+                  args = list(xi = player_results$zeta + player_results$delta*player_results$height_scaled,
+                              omega = player_results$omega,
+                              alpha = player_results$alpha),
+                  aes(col = "Predictive\nDistribution"),
+                  size = 2) +
+    scale_x_continuous(limits = c(0, 120)) + 
+    labs(x = "Exit Velocity (mph)", y = "Density") +
+    annotate("text", x = 15, y = 0.05, label = player_name, size = 6) + 
+    scale_fill_manual(name = "", values = c("Observed 2025\nExit Velocities" = "#00A3E0")) + 
+    scale_color_manual(name = "", values = c("Predictive\nDistribution" = "black")) +
+    guides(fill = guide_legend(order = 2, override.aes = list(color = NA)), 
+           color = guide_legend(order = 1)) +
+    theme_bw()
+}
 
 
 

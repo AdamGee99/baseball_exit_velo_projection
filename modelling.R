@@ -68,7 +68,8 @@ stan_data = list(N = nrow(train),
                  J = train$stan_batter_id %>% unique() %>% length(),
                  y = train$exit_velo,
                  id = train$stan_batter_id,
-                 weight = train$weight_scaled)
+                 weight = train$weight_scaled,
+                 height = train$height_scaled)
 
 stan_file = here("stan", "baseline.stan")
 #model
@@ -175,10 +176,10 @@ fit = mod$sample(data = stan_data,
 
 
 #save advanced fit
-#fit$save_object(file = here("stan fits", "advanced_weight_large.RDS"))
+#fit$save_object(file = here("stan fits", "advanced_weight_height_large.RDS"))
 
 #read in fit
-#fit = readRDS(file = here("stan fits", "advanced_weight_scaled.RDS"))
+fit = readRDS(file = here("stan fits", "advanced_weight_large.RDS"))
 
 fit$summary() %>% print(n = 30)
 fit$summary("delta")
@@ -216,6 +217,8 @@ advanced_rmse
 
 #2.04 on all players
 
+#2.0356
+
 
 
 mcmc_pairs(fit$draws(c("delta", "zeta[4]"))) #scaled height is 0 for this guy, so no ridge
@@ -232,7 +235,55 @@ mcmc_pairs(fit$draws(c("delta", "zeta[61]"))) #ridge is in the reverse direction
 
 
 
+#15 players with the most batted balls in 2025 season
+players_vis = mlb_full %>% 
+  filter(game_year == 2025) %>% 
+  group_by(stan_batter_id, player_name) %>% 
+  summarise(n = n()) %>% 
+  ungroup() %>%
+  arrange(desc(n)) %>% 
+  slice_head(n = 15) %>%
+  select(-n)
 
+#draws of parameters
+draws = get_par_draws(fit, player_pars = c("zeta", "omega"), global_pars = c("delta", "alpha")) %>%
+  mutate(pred_mean_exit_velo = get_skew_mean(location = zeta + delta*weight_scaled,
+                                             scale = omega,
+                                             skew = alpha)) %>%
+  right_join(players_vis, by = "stan_batter_id") 
+
+pred_mean_dist = plot_pred_mean_dists(players_vis, draws)
+
+#credible intervals are somewhat valid, 95% don't fall within the 95% credible intervals, but most do (most red lines in the blue dists)
+#this is cause the model assumes the player isn't changing from this season to the next, 
+#when in reality plenty of things could change like, team theyre playing on, coach, changing up batting mechanics, ...
+#of course this is because we are making such a hug jump from season to season,
+#in the short term, this model will definitely be more valid, ie from game to game, which is totally feasible
+
+ggsave(pred_mean_dist, filename = here("figs", "player_predictive_dist.png"), dpi = 600, height = 5, width = 7)
+
+
+
+
+#player predictive plots for two players
+
+#Ernie Clement & Bo Bichette
+ernie = plot_player_predictive_dist(player_id = 61, player_name = "Ernie Clement", fit_results = advanced_results)
+bo = plot_player_predictive_dist(32, player_name = "Bo Bichette", fit_results = advanced_results)
+judge = plot_player_predictive_dist(186, player_name = "Aaron Judge", fit_results = advanced_results)
+arraez = plot_player_predictive_dist(82, player_name = "Luis Arraez", fit_results = advanced_results)
+
+
+ernie
+bo
+judge
+arraez
+
+#save
+ggsave(plot = ernie, filename = here("figs", "ernie_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
+ggsave(plot = bo, filename = here("figs", "bo_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
+ggsave(plot = judge, filename = here("figs", "judge_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
+ggsave(plot = arraez, filename = here("figs", "arraez_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
 
 
 
