@@ -49,10 +49,14 @@ naive = mlb_full %>%
   pivot_wider(names_from = game_year, values_from = mean_exit_velo) %>%
   rename(pred_mean_exit_velo = `2024`,
          true_mean_exit_velo = `2025`)
+#plot pred vs true
+plot_results(naive)
+
 naive_rmse = get_rmse(naive)
 naive_rmse
-#1.38
+#1.38 - 100 players
 
+#2.22 - all players
 
 
 
@@ -80,7 +84,7 @@ fit = mod$sample(data = stan_data,
 
 
 #save baseline fit
-#fit$save_object(file = here("stan fits", "baseline.RDS"))
+#fit$save_object(file = here("stan fits", "baseline_large.RDS"))
 
 #read in fit
 fit = readRDS(file = here("stan fits", "baseline.RDS"))
@@ -110,8 +114,10 @@ plot_results(baseline_results)
 #rmse
 baseline_rmse = get_rmse(baseline_results)
 baseline_rmse
-#1.59
+#1.59 - 100 players
 #on avg model has 2025 seasonal mean error of 1.59 mph 
+
+#2.30 - all players
 
 
 
@@ -167,14 +173,15 @@ fit = mod$sample(data = stan_data,
                  refresh = 100)
 
 
+
 #save advanced fit
-#fit$save_object(file = here("stan fits", "advanced_age_weight_scaled.RDS"))
+#fit$save_object(file = here("stan fits", "advanced_weight_large.RDS"))
 
 #read in fit
 #fit = readRDS(file = here("stan fits", "advanced_weight_scaled.RDS"))
 
 fit$summary() %>% print(n = 30)
-fit$summary("gamma")
+fit$summary("delta")
 #good convergence - rhat close to 1
 
 #posteriors
@@ -187,7 +194,7 @@ mcmc_areas(fit$draws(c("mu_omega"))) #scales global meanff
 mcmc_areas(fit$draws(c("sigma_zeta", "sigma_omega"))) #location, scale, skew global variance
 
 #get fitted pars
-advanced_fitted_pars_2024 = get_player_pars(fit, player_pars = c("zeta", "omega"), global_pars = c("alpha", "delta", "gamma"))
+advanced_fitted_pars_2024 = get_player_pars(fit, player_pars = c("zeta", "omega"), global_pars = c("alpha", "delta"))
 
 #results (true vals vs predicted vals)
 advanced_results = advanced_fitted_pars_2024 %>%
@@ -207,6 +214,9 @@ advanced_rmse
 #1.4066 - weight & height
 
 
+#2.04 on all players
+
+
 
 mcmc_pairs(fit$draws(c("delta", "zeta[4]"))) #scaled height is 0 for this guy, so no ridge
 mcmc_pairs(fit$draws(c("delta", "zeta[46]"))) #the worst rhat is for the heaviest guy
@@ -214,6 +224,13 @@ mcmc_pairs(fit$draws(c("delta", "zeta[46]"))) #the worst rhat is for the heavies
 #this is an identifiability issue
 
 mcmc_pairs(fit$draws(c("delta", "zeta[61]"))) #ridge is in the reverse direction for lighter players 
+
+
+
+
+### Visualizing ###
+
+
 
 
 
