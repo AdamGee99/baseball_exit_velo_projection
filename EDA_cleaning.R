@@ -38,16 +38,21 @@ mlb_full = mlb_full %>%
   filter(type == "X") %>% #batted balls only
   select(all_of(keep_cols))
 
-#100 batter ids with the most batted balls
-batter_ids = mlb_full %>% 
-  group_by(batter) %>% 
-  summarise(n = n()) %>% 
-  ungroup() %>%
-  arrange(desc(n)) %>%
-  slice_head(n = 100) %>%
-  pull(batter)
+# #100 batter ids with the most batted balls
+# batter_ids = mlb_full %>%
+#   group_by(batter) %>%
+#   summarise(n = n()) %>%
+#   ungroup() %>%
+#   arrange(desc(n)) %>%
+#   slice_head(n = 100) %>%
+#   pull(batter)
+
+#batters with at least 100 batted balls
+batter_ids = mlb_full %>% group_by(batter) %>% summarise(n = n()) %>% filter(n >= 200) %>% pull(batter)
 
 mlb_full = mlb_full %>% filter(batter %in% batter_ids)
+
+
 
 
 #join heights and weights
@@ -75,7 +80,8 @@ mlb_full = mlb_full %>%
   mutate(game_date = ymd(game_date)) %>%
   mutate(across(where(is.character), as.factor)) %>%
   rename(exit_velo = launch_speed) %>%
-  filter(!is.na(exit_velo)) #remove missing responses
+  filter(!is.na(exit_velo))  %>%  #remove missing responses
+  filter(!is.na(height) & !is.na(weight)) #remove players with no height/weight
 
 
 #filter for players in both 2024, 20245 seasons
@@ -137,7 +143,7 @@ mlb_full = mlb_full %>% select(-c(height, weight)) %>% left_join(height_weight, 
 
 
 #save
-#write.csv(mlb_full, file = here("data", "mlb_2024_2025.csv"), row.names = FALSE)
+#write.csv(mlb_full, file = here("data", "mlb_2024_2025_large.csv"), row.names = FALSE)
 
 
 
@@ -201,15 +207,35 @@ lm(dat = mlb_full, formula = exit_velo ~ height) %>% summary()
 
 
 # weight effects 
-# bin for visualization
-ggplot(data = mlb_full, mapping = aes(x = cut(weight, breaks = 6), y = exit_velo)) +
-  geom_boxplot() + labs(x = "Weight Bin (pounds)", y = "Batted Ball Exit Velo (mph)") + theme_bw()
+# bin by quantile for visualization
+ggplot(data = mlb_full, mapping = aes(x = cut(weight, breaks = quantile(weight, probs = seq(0, 1, by = 0.1)), include.lowest = TRUE), y = exit_velo)) +
+  geom_boxplot() + labs(x = "Weight Bin Quantile (pounds)", y = "Batted Ball Exit Velo (mph)") + theme_bw()
 
-ggplot(data = mlb_player_summary, mapping = aes(x =  cut(weight, breaks = 6), y = mean_exit_velo)) +
-  geom_boxplot() + labs(x = "Weight Bin (pounds)", y = "Seasonal Mean Batted Ball Exit Velo (mph)") + theme_bw()
+plot_exit_velo_dist(mlb_full %>% filter(weight <= 180), title = "Lightest Players (0-10% Quantile)")
+plot_exit_velo_dist(mlb_full %>% filter(weight > 228), title = "Heaviest Players (90-100% Quantile)")
+
+ggplot(data = mlb_player_summary, mapping = aes(x = cut(weight, breaks = quantile(weight, probs = seq(0, 1, by = 0.1)), include.lowest = TRUE), y = mean_exit_velo)) +
+  geom_boxplot() + labs(x = "Weight Bin Quantile (pounds)", y = "Seasonal Mean Batted Ball Exit Velo (mph)") + theme_bw()
 
 lm(dat = mlb_full, formula = exit_velo ~ weight) %>% summary()
 #significant weight effect
+
+
+ggplot(data = mlb_player_summary, mapping = aes(x = height, y = weight)) + 
+  geom_point() + labs(x = "Height (inches)", y = "Weight (lb)") + theme_bw()
+#pretty correlated
+cor(mlb_player_summary$height, mlb_player_summary$weight)
+#0.62
+
+
+#need quite a few batters to start seeing real effects though
+lm(dat = mlb_full %>% filter(stan_batter_id %in% 1:10), formula = exit_velo ~ height + weight) %>% summary()
+#eg with only 10 batters the height effect is significantly negative
+#with 100 its significantly positive and most likely real
+
+#need to include wide range of heights when we subset the data to capture the effect
+lm(dat = mlb_full %>% filter(stan_batter_id %in% 1:100), formula = exit_velo ~ height + weight) %>% summary()
+
 
 
 
@@ -222,16 +248,14 @@ ggplot(data = mlb_player_summary, mapping = aes(x = cut(age_bat, breaks = 6), y 
 #age mostly pretty flat, no global effect
 #maybe very small effect but probably insignificant
 
+lm(dat = mlb_full, formula = exit_velo ~ age_bat) %>% summary()
+lm(dat = mlb_full, formula = exit_velo ~ age_bat + I(age_bat^2)) %>% summary()
+#no quadratic age effect
 
-lm(dat = mlb_full, formula = exit_velo ~ age_bat + height + weight) %>% summary()
+#slight correlation between age and weight
+cor(mlb_player_summary$age_bat, mlb_player_summary$weight)
+#older players generally heavier
 
-#need quite a few batters to start seeing real effects though
-lm(dat = mlb_full %>% filter(stan_batter_id %in% 1:10), formula = exit_velo ~ age_bat + height + weight) %>% summary()
-#eg with only 10 batters the height effect is significantly negative
-#with 100 its significantly positive and most likely real
-
-#need to include wide range of heights when we subset the data to capture the effect
-lm(dat = mlb_full %>% filter(stan_batter_id %in% 1:100), formula = exit_velo ~ age_bat + height + weight) %>% summary()
 
 #weight seems to have more signal and is always present even with a small amount of players
 
