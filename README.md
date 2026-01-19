@@ -15,12 +15,43 @@
 - Train model on 2024 season, evaluate on 2025 season.
 
 ## Exploratory Data Analysis
-- dist of exit velos
-- weight/height effect
-- lack of age effect
+- The distribution of batter's exit velocities:
+<p align="center">
+  <img src="figs/shohei_exit_velo.png" width="49%" />
+  <img src="figs/kwan_exit_velo.png" width="49%" />
+</p>
+<p align="center">
+  <em>Distribution of Shohei Ohtani's and Steven Kwan's Exit Velocities from the 2024-2025 seasons.</em>
+</p>
 
-## Modelling Process
-- briefly define model, maybe assumptions?
+- Feature relationships:
+<p align="center">
+  <img src="figs/mean_exit_velo_v_age.png" width="49%" />
+  <img src="figs/mean_exit_velo_v_weight.png" width="49%" />
+</p>
+<p align="center">
+  <em>Seasonal Mean Exit Velocity vs Batter Age and Weight Quantile.</em>
+</p>
+
+- Main findings:
+   - Batter exit velocites follow a [skew normal distribution](https://en.wikipedia.org/wiki/Skew_normal_distribution).
+   - Heavier batters hit the ball harder than lighter batters - include weight effect in model.
+   - Exit velocity stable across all batter ages - do not include age effect in model. 
+
+## Model 
+- Consider $Y_{ij}$ as the $i^{th}$ batted ball exit velocity from batter $j$. Assume:
+```math
+Y_{ij} \sim \text{SkewNormal}(\zeta_j + \delta \cdot \text{weight}_j,\ \omega_j,\ \alpha)
+```
+and assign priors:
+```math
+\zeta_j \sim \text{Normal}(\mu_\zeta, \sigma_\zeta), \;\; \omega_j \sim \text{Normal}(\mu_\omega, \sigma_\omega), \;\; \delta \sim \text{Normal}(0,1), \;\; \alpha \sim \text{Normal}(0,1)
+```
+```math
+\mu_\zeta \sim \text{Normal}(110, 5), \;\; \mu_\omega \sim \text{Normal}(25, 2), \;\; \sigma_\zeta, \sigma_\omega \sim \text{Normal}_+(0,2)
+```
+- Each player has their own location and scale parameter. These are partially pooled.
+- Skew parameter is common across all players.
 
 ## Results
 - prediction results in a table against naive model
