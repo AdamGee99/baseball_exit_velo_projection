@@ -272,12 +272,14 @@ ernie = plot_player_predictive_dist(player_id = 61, player_name = "Ernie Clement
 bo = plot_player_predictive_dist(32, player_name = "Bo Bichette", fit_results = advanced_results)
 judge = plot_player_predictive_dist(186, player_name = "Aaron Judge", fit_results = advanced_results)
 arraez = plot_player_predictive_dist(82, player_name = "Luis Arraez", fit_results = advanced_results)
+big_dumper = plot_player_predictive_dist(249, player_name = "Cal Raleigh", fit_results = advanced_results)
 
 
 ernie
 bo
 judge
 arraez
+big_dumper
 
 #save
 ggsave(plot = ernie, filename = here("figs", "ernie_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
