@@ -143,7 +143,7 @@ mlb_full = mlb_full %>% select(-c(height, weight)) %>% left_join(height_weight, 
 
 
 #save
-#write.csv(mlb_full, file = here("data", "mlb_2024_2025_large.csv"), row.names = FALSE)
+#write.csv(mlb_full, file = here("data", "mlb_2024_2025.csv"), row.names = FALSE)
 
 
 
@@ -157,8 +157,11 @@ mlb_full = read.csv(here("data", "mlb_2024_2025.csv"))
 #100 players with the most batted balls
 mlb_full$player_name %>% unique() %>% length() 
 
-plot_exit_velo_dist(mlb_full)
+all_players = plot_exit_velo_dist(mlb_full)
+all_players
 #follows a skew normal distribution
+
+ggsave(all_players, filename = here("figs", "all_player_exit_velo.png"), dpi = 600, width = 7, height = 4)
 
 #individual players
 plot_exit_velo_dist(mlb_full %>% filter(stan_batter_id == 1))
@@ -170,6 +173,13 @@ plot_exit_velo_dist(mlb_full %>% filter(stan_batter_id == 6))
 plot_exit_velo_dist(mlb_full %>% filter(stan_batter_id == 7))
 plot_exit_velo_dist(mlb_full %>% filter(stan_batter_id == 8))
 plot_exit_velo_dist(mlb_full %>% filter(stan_batter_id == 9))
+
+shohei = plot_exit_velo_dist(mlb_full %>% filter(stan_batter_id == 226))
+kwan = plot_exit_velo_dist(mlb_full %>% filter(stan_batter_id == 240))
+
+ggsave(shohei, filename = here("figs", "shohei_exit_velo.png"), dpi = 600, width = 7, height = 4)
+ggsave(kwan, filename = here("figs", "kwan_exit_velo.png"), dpi = 600, width = 7, height = 4)
+
 
 #players clearly have different locations in skew normal dist
 #scales look slightly different too
@@ -208,17 +218,20 @@ lm(dat = mlb_full, formula = exit_velo ~ height) %>% summary()
 
 # weight effects 
 # bin by quantile for visualization
-ggplot(data = mlb_full, mapping = aes(x = cut(weight, breaks = quantile(weight, probs = seq(0, 1, by = 0.1)), include.lowest = TRUE), y = exit_velo)) +
-  geom_boxplot() + labs(x = "Weight Bin Quantile (pounds)", y = "Batted Ball Exit Velo (mph)") + theme_bw()
+ggplot(data = mlb_full, mapping = aes(x = cut(weight, breaks = quantile(weight, probs = seq(0, 1, by = 0.2)), include.lowest = TRUE), y = exit_velo)) +
+  geom_boxplot() + labs(x = "Weight Quantile (pounds)", y = "Batted Ball Exit Velo (mph)") + theme_bw()
 
 plot_exit_velo_dist(mlb_full %>% filter(weight <= 180), title = "Lightest Players (0-10% Quantile)")
 plot_exit_velo_dist(mlb_full %>% filter(weight > 228), title = "Heaviest Players (90-100% Quantile)")
 
-ggplot(data = mlb_player_summary, mapping = aes(x = cut(weight, breaks = quantile(weight, probs = seq(0, 1, by = 0.1)), include.lowest = TRUE), y = mean_exit_velo)) +
-  geom_boxplot() + labs(x = "Weight Bin Quantile (pounds)", y = "Seasonal Mean Batted Ball Exit Velo (mph)") + theme_bw()
+weight_exit_velo_seasonal = ggplot(data = mlb_player_summary, mapping = aes(x = cut(weight, breaks = quantile(weight, probs = seq(0, 1, by = 0.2)), include.lowest = TRUE), y = mean_exit_velo)) +
+  geom_boxplot() + labs(x = "Weight Quantile (pounds)", y = "Seasonal Mean Exit Velo (mph)") + theme_bw()
+weight_exit_velo_seasonal
 
 lm(dat = mlb_full, formula = exit_velo ~ weight) %>% summary()
 #significant weight effect
+
+ggsave(plot = weight_exit_velo_seasonal, filename = here("figs", "mean_exit_velo_v_weight.png"), dpi = 600, height = 4, width = 7)
 
 
 ggplot(data = mlb_player_summary, mapping = aes(x = height, y = weight)) + 
@@ -240,11 +253,15 @@ lm(dat = mlb_full %>% filter(stan_batter_id %in% 1:100), formula = exit_velo ~ h
 
 
 # age effects
-ggplot(data = mlb_full, mapping = aes(x = cut(age_bat, breaks = 6), y = exit_velo)) +
-  geom_boxplot() + labs(x = "Age", y = "Batted Ball Exit Velo (mph)") + theme_bw()
+ggplot(data = mlb_full, mapping = aes(x = cut(age_bat, breaks = quantile(age_bat, probs = seq(0, 1, by = 0.2)), include.lowest = TRUE), y = exit_velo)) +
+  geom_boxplot() + labs(x = "Age Quantile", y = "Batted Ball Exit Velo (mph)") + theme_bw()
 
-ggplot(data = mlb_player_summary, mapping = aes(x = cut(age_bat, breaks = 6), y = mean_exit_velo)) +
-  geom_boxplot() + labs(x = "Age", y = "Seasonal Mean Batted Ball Exit Velo (mph)") + theme_bw()
+age_exit_velo_seasonal = ggplot(data = mlb_player_summary, mapping = aes(x = cut(age_bat, breaks = quantile(age_bat, probs = seq(0, 1, by = 0.2)), include.lowest = TRUE), y = mean_exit_velo)) +
+  geom_boxplot() + labs(x = "Age Quantile", y = "Seasonal Mean Batted Ball Exit Velo (mph)") + theme_bw()
+age_exit_velo_seasonal
+
+ggsave(plot = age_exit_velo_seasonal, filename = here("figs", "mean_exit_velo_v_age.png"), dpi = 600, height = 4, width = 7)
+
 #age mostly pretty flat, no global effect
 #maybe very small effect but probably insignificant
 

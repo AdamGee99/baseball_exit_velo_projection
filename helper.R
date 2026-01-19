@@ -130,14 +130,14 @@ plot_pred_mean_dists = function(players, draws) {
   #player predictive distributions vs true mean exit velo in 2025
   pred_mean_dists = draws %>%
     ggplot(mapping = aes(x = pred_mean_exit_velo, y = factor(player_name, levels = players_vis$player_name))) +
-    stat_histinterval(fill = "#00A3E0") +
+    stat_histinterval(fill = "orange") +
     geom_segment(data = geom_seg_vals,
                  aes(x = true_mean_exit_velo, xend = true_mean_exit_velo, y = ymin, yend = ymax,
                      color = "True Mean Exit\nVelocity in 2025"), linewidth = 1.1, 
                  key_glyph = 'vline') +
     labs(x = "Estimated 2025 Mean Exit Velocity (mph)", y = "Batter") +
     scale_x_continuous(limits = c(81.5, 93), n.breaks = 10) +
-    scale_color_manual(name = "", values=c("True Mean Exit\nVelocity in 2025" = "red"))+
+    scale_color_manual(name = "", values=c("True Mean Exit\nVelocity in 2025" = "#00A3E0"))+
     theme_bw()
   pred_mean_dists
 }
@@ -163,7 +163,7 @@ plot_player_predictive_dist = function(player_id, player_name, fit_results) {
     scale_x_continuous(limits = c(0, 120)) + 
     labs(x = "Exit Velocity (mph)", y = "Density") +
     annotate("text", x = 15, y = 0.05, label = player_name, size = 6) + 
-    scale_fill_manual(name = "", values = c("Observed 2025\nExit Velocities" = "#00A3E0")) + 
+    scale_fill_manual(name = "", values = c("Observed 2025\nExit Velocities" = "orange")) + 
     scale_color_manual(name = "", values = c("Predictive\nDistribution" = "black")) +
     guides(fill = guide_legend(order = 2, override.aes = list(color = NA)), 
            color = guide_legend(order = 1)) +
