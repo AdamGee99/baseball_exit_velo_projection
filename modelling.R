@@ -286,6 +286,7 @@ ggsave(plot = ernie, filename = here("figs", "ernie_predictive_dist.png"), dpi =
 ggsave(plot = bo, filename = here("figs", "bo_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
 ggsave(plot = judge, filename = here("figs", "judge_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
 ggsave(plot = arraez, filename = here("figs", "arraez_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
+ggsave(plot = big_dumper, filename = here("figs", "big_dumper_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
 
 
 
