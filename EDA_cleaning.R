@@ -257,7 +257,7 @@ ggplot(data = mlb_full, mapping = aes(x = cut(age_bat, breaks = quantile(age_bat
   geom_boxplot() + labs(x = "Age Quantile", y = "Batted Ball Exit Velo (mph)") + theme_bw()
 
 age_exit_velo_seasonal = ggplot(data = mlb_player_summary, mapping = aes(x = cut(age_bat, breaks = quantile(age_bat, probs = seq(0, 1, by = 0.2)), include.lowest = TRUE), y = mean_exit_velo)) +
-  geom_boxplot() + labs(x = "Age Quantile", y = "Seasonal Mean Batted Ball Exit Velo (mph)") + theme_bw()
+  geom_boxplot() + labs(x = "Age Quantile", y = "Seasonal Mean Exit Velo (mph)") + theme_bw()
 age_exit_velo_seasonal
 
 ggsave(plot = age_exit_velo_seasonal, filename = here("figs", "mean_exit_velo_v_age.png"), dpi = 600, height = 4, width = 7)
