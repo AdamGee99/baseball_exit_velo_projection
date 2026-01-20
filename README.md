@@ -36,6 +36,7 @@
 
 - Main findings:
    - Batter exit velocites follow a [skew normal distribution](https://en.wikipedia.org/wiki/Skew_normal_distribution).
+   - Batter's have distinctly different distributions. 
    - Heavier batters hit the ball harder than lighter batters - include weight effect in model.
    - Exit velocity stable across all batter ages - do not include age effect in model. 
 
