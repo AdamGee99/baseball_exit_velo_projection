@@ -176,9 +176,11 @@ plot_exit_velo_dist(mlb_full %>% filter(stan_batter_id == 9))
 
 shohei = plot_exit_velo_dist(mlb_full %>% filter(stan_batter_id == 226))
 kwan = plot_exit_velo_dist(mlb_full %>% filter(stan_batter_id == 240))
+arraez = plot_exit_velo_dist(mlb_full %>% filter(stan_batter_id == 82))
 
 ggsave(shohei, filename = here("figs", "shohei_exit_velo.png"), dpi = 600, width = 7, height = 4)
 ggsave(kwan, filename = here("figs", "kwan_exit_velo.png"), dpi = 600, width = 7, height = 4)
+ggsave(arraez, filename = here("figs", "arraez_exit_velo.png"), dpi = 600, width = 7, height = 4)
 
 
 #players clearly have different locations in skew normal dist
