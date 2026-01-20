@@ -54,9 +54,49 @@ and assign priors:
 - Skew parameter is common across all players.
 
 ## Results
-- prediction results in a table against naive model
+<div align="center">
+<table>
+  <caption><b>Table 1:</b> Prediction Results</caption>
+  <thead>
+    <tr>
+      <th></th>
+      <th>Prediction Error (RMSE)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Previous season's mean</td>
+      <td>2.22</td>
+    </tr>
+    <tr>
+      <td>My model</td>
+      <td>2.04</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+- On average, model is 2.04 mph off of true seasonal mean exit velocities in 2025. Improvement on the naive approach: using previous season's mean exit velocity as a guess for the next season.
+
 - pred mean dists plot
-- 2 player predictive dists plots
+
+<p align="center">
+  <img src="figs/player_predictive_dist.png" width="70%" />
+</p>
+<p align="center">
+  <em>Predicted Player Mean Exit Velocity in 2025. The 95% credible intervals are shown.</em>
+</p>
+
+
+- 2 player predictive dists plots for a slugger and contact hitter
+<p align="center">
+  <img src="figs/arraez_predictive_dist.png" width="49%" />
+  <img src="figs/big_dumper_predictive_dist.png" width="49%" />
+</p>
+<p align="center">
+  <em>Predictive Exit Velocity Distributions for Luis Arraez and Cal Raleigh.</em>
+</p>
+
 
 ## Future Work
 - incorporating player-level age effects (need player trends over multiple seasons),
