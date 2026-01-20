@@ -16,7 +16,8 @@ plot_exit_velo_dist = function(df, title = NULL) {
   
   ggplot(df, mapping = aes(x = exit_velo, y = after_stat(density))) +
     geom_histogram(colour = "black", fill = "orange", bins = 30) +
-    labs(x = "Exit Velocity (mph)", y = "Density", title = player_name) +
+    annotate("text", x = -Inf, y = Inf, hjust = -0.2, vjust = 2, label = player_name, size = 6) + 
+    labs(x = "Exit Velocity (mph)", y = "Density") +
     scale_x_continuous(limits = c(0, 130), n.breaks = 12) +
     scale_y_continuous(n.breaks = 4) +
     theme_bw()
@@ -160,15 +161,16 @@ plot_player_predictive_dist = function(player_id, player_name, fit_results) {
                               alpha = player_results$alpha),
                   aes(col = "Predictive\nDistribution"),
                   size = 2) +
-    scale_x_continuous(limits = c(0, 120)) + 
+    scale_x_continuous(limits = c(0, 130), n.breaks = 12) +
     labs(x = "Exit Velocity (mph)", y = "Density") +
-    annotate("text", x = 15, y = 0.05, label = player_name, size = 6) + 
+    annotate("text", x = -Inf, y = Inf, hjust = -0.2, vjust = 2, label = player_name, size = 6) + 
     scale_fill_manual(name = "", values = c("Observed 2025\nExit Velocities" = "orange")) + 
     scale_color_manual(name = "", values = c("Predictive\nDistribution" = "black")) +
     guides(fill = guide_legend(order = 2, override.aes = list(color = NA)), 
            color = guide_legend(order = 1)) +
     theme_bw()
 }
+
 
 
 

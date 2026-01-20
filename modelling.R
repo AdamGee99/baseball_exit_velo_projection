@@ -273,6 +273,7 @@ bo = plot_player_predictive_dist(32, player_name = "Bo Bichette", fit_results = 
 judge = plot_player_predictive_dist(186, player_name = "Aaron Judge", fit_results = advanced_results)
 arraez = plot_player_predictive_dist(82, player_name = "Luis Arraez", fit_results = advanced_results)
 big_dumper = plot_player_predictive_dist(249, player_name = "Cal Raleigh", fit_results = advanced_results)
+shohei = plot_player_predictive_dist(226, player_name = "Shohei Ohtani", fit_results = advanced_results)
 
 
 ernie
@@ -280,6 +281,7 @@ bo
 judge
 arraez
 big_dumper
+shohei
 
 #save
 ggsave(plot = ernie, filename = here("figs", "ernie_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
@@ -287,6 +289,7 @@ ggsave(plot = bo, filename = here("figs", "bo_predictive_dist.png"), dpi = 600, 
 ggsave(plot = judge, filename = here("figs", "judge_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
 ggsave(plot = arraez, filename = here("figs", "arraez_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
 ggsave(plot = big_dumper, filename = here("figs", "big_dumper_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
+ggsave(plot = shohei, filename = here("figs", "shohei_predictive_dist.png"), dpi = 600, height = 3, width = 7.5)
 
 
 
